@@ -50,7 +50,8 @@
     font-size: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem); line-height: 1.6;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
   }
-  body.gated { overflow: hidden; }
+  html:has(body.gated), body.gated { overflow: hidden; overscroll-behavior: none; }
+  .gate { touch-action: none; overscroll-behavior: none; }
   img, video { max-width: 100%; display: block; }
   a { color: inherit; text-decoration: none; }
   ::selection { background: var(--cobalt-500); color: #fff; }
@@ -587,10 +588,15 @@
     soundToggle.addEventListener("click", () => setSound(soundToggle.getAttribute("aria-pressed") !== "true"));
 
     /* ---------- entry gate ---------- */
+    // iPhone Safari scrolls the page behind the gate and restores old scroll positions: always start at the hero.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    const toHero = () => window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (!location.hash) toHero();
     const gate = document.getElementById("gate");
+    gate.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
     gate.querySelectorAll("[data-enter]").forEach((b) => b.addEventListener("click", () => {
       if (b.dataset.enter === "sound") setSound(true);
-      gate.classList.add("gone"); document.body.classList.remove("gated");
+      toHero(); gate.classList.add("gone"); document.body.classList.remove("gated");
       setTimeout(() => gate.querySelector("video").pause(), 1200);
     }));
 
